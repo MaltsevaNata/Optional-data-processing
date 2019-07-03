@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import numpy
-from utils_boxes import bbox_transform
+from utils_boxes import bbox_transform_l_corner
 from utils_annot import parse_annotation_xml, save_anno_xml
 import xml.etree.ElementTree as xml
 
@@ -85,7 +85,7 @@ for ann in annlist:
                 w = obj[2]
                 h = obj[3]
 
-                xmin, ymin, xmax, ymax = bbox_transform([float(x), float(y), float(w), float(h)])
+                xmin, ymin, xmax, ymax = bbox_transform_l_corner([float(x), float(y), float(w), float(h)])
                 #get class number
 
                 object = xml.Element("object")

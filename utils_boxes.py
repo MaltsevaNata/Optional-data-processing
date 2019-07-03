@@ -180,8 +180,21 @@ def bgr_to_rgb(ims):
     out.append(im[:,:,::-1])
   return out
 
+def bbox_transform_l_corner(bbox):
+    """convert a bbox of form [lx, ly, w, h] (left corner koordinates) to [xmin, ymin, xmax, ymax]. Works
+    for numpy array or list of tensors.
+    """
+    lx, ly, w, h = bbox
+    out_box = [[]]*4
+    out_box[0] = lx #xmin
+    out_box[1] = ly #ymin
+    out_box[2] = lx+w #xmax
+    out_box[3] = ly+h #ymax
+
+    return out_box
+
 def bbox_transform(bbox):
-    """convert a bbox of form [cx, cy, w, h] to [xmin, ymin, xmax, ymax]. Works
+    """convert a bbox of form [cx, cy, w, h] (center koordinates) to [xmin, ymin, xmax, ymax]. Works
     for numpy array or list of tensors.
     """
     cx, cy, w, h = bbox
