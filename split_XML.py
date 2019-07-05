@@ -38,7 +38,7 @@ def create_object(pictures, class_name):
         root.append(object)
 
 
-exitFlag = False
+
 old_tree = xml.parse(input_xml)
 old_root = old_tree.getroot()
 for elem in old_root:
@@ -47,58 +47,59 @@ for elem in old_root:
         class_name = subelem.find('Label').text
         PictureInfo = subelem.find('PictureInfo')
         for pictures in PictureInfo:
+            exitFlag = False
             name = pictures[0].text
-            if name == '"01228.jpg"':
-                for file in created_files:
-                    if name == file:
-                        #Значит файл уже создан, нужно добавить в него еще объект
-                        xml_name = name.replace('jpg', 'xml').strip('""')
-                        tree = xml.parse(folder + xml_name)
-                        root = tree.getroot()
-                        create_object(pictures, class_name)
-                        tree.write(folder + xml_name)
-                        exitFlag = True
-                        break
+            #if name == '"01228.jpg"':
+            for file in created_files:
+                if name == file:
+                    #Значит файл уже создан, нужно добавить в него еще объект
+                    xml_name = name.replace('jpg', 'xml').strip('""')
+                    tree = xml.parse(folder + xml_name)
+                    root = tree.getroot()
+                    create_object(pictures, class_name)
+                    tree.write(folder + xml_name)
+                    exitFlag = True
+                    break
 
-                if not exitFlag:
-                    #создаем новый файл
-                    # Каждый блок <_> содержит информацию об отдельном фото
-                    #создаем отдельный файл под каждый блок
-                    root = xml.Element("annotation")
+            if not exitFlag:
+                #создаем новый файл
+                # Каждый блок <_> содержит информацию об отдельном фото
+                #создаем отдельный файл под каждый блок
+                root = xml.Element("annotation")
 
-                    fold = xml.Element("folder")
-                    fold.text = folder
-                    root.append(fold)
+                fold = xml.Element("folder")
+                fold.text = folder
+                root.append(fold)
 
-                    filename = xml.Element("filename")
-                    root.append(filename)
-                    filename.text = name
+                filename = xml.Element("filename")
+                root.append(filename)
+                filename.text = name
 
-                    path = xml.Element("path")
-                    path.text = folder + filename.text
-                    root.append(path)
+                path = xml.Element("path")
+                path.text = folder + filename.text
+                root.append(path)
 
-                    source = xml.Element("source")
-                    create_subelement(source, "database", "Unknown")
-                    root.append(source)
+                source = xml.Element("source")
+                create_subelement(source, "database", "Unknown")
+                root.append(source)
 
-                    size = xml.Element("size")
-                    create_subelement(size, "width", image_width)
-                    create_subelement(size, "height", image_height)
-                    create_subelement(size, "depth", image_depth)
-                    root.append(size)
+                size = xml.Element("size")
+                create_subelement(size, "width", image_width)
+                create_subelement(size, "height", image_height)
+                create_subelement(size, "depth", image_depth)
+                root.append(size)
 
-                    segmented = xml.Element("segmented")
-                    segmented.text = '0'
-                    root.append(segmented)
+                segmented = xml.Element("segmented")
+                segmented.text = '0'
+                root.append(segmented)
 
 
-                    try:
-                        create_object(pictures, class_name)
-                    except:
-                        continue
+                try:
+                    create_object(pictures, class_name)
+                except:
+                    continue
 
-                    # ‭ ‬создаём новый файл XML
-                    tree = xml.ElementTree(root)
-                    tree.write(folder + filename.text.replace('jpg', 'xml').strip('""'))
-                    created_files.append(filename.text)
+                # ‭ ‬создаём новый файл XML
+                tree = xml.ElementTree(root)
+                tree.write(folder + filename.text.replace('jpg', 'xml').strip('""'))
+                created_files.append(filename.text)
