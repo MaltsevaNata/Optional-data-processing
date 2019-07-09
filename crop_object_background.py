@@ -91,7 +91,7 @@ for ann in annlist:
             if subelem.tag == 'bndbox':
                 imageObject = Image.open(in_img + '/' + ann.replace('xml', 'jpg'))
                 width, height = imageObject.size
-                box= [None]*4
+                '''box= [None]*4
                 i = 0
                 for values in subelem:
                     box[i] = int(values.text)
@@ -124,5 +124,5 @@ for ann in annlist:
                 # Display the cropped portion
                 save_location = out_img + '/' + classname + '/'+ ann.replace('xml', 'jpg')
                 cropped.save(save_location)
-                #cropped.show()
-                #create_background(ann, width, height)
+                #cropped.show()'''
+                create_background(ann, width, height)
