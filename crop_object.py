@@ -7,9 +7,9 @@ from PIL import Image
 from utils_boxes import bbox_transform_inv
 import random
 
-in_img = 'D:/Study/Python/old_hh_2/1_selected_img'
-out_img = 'D:/Study/Python/old_hh_2/cropped_objects'
-annotations = 'D:/Study/Python/old_hh_2/1_selected_annot'
+in_img = 'D:/Study/Python/old_hh/selected_img'
+out_img = 'D:/Study/Python/small_cropped_objects'
+annotations = 'D:/Study/Python/old_hh/selected_annot'
 
 def resize(xmin, ymin, xmax, ymax) :
     deltay = int(ymax) - int(ymin)
@@ -98,9 +98,9 @@ for ann in annlist:
                     i=i+1
                 xmin, ymin, xmax, ymax = box
 
-                if (classname == 'helmet' or classname == 'head' or classname == 'helmet_off' or classname == 'hood' or classname == 'hat'):
+                '''if (classname == 'helmet' or classname == 'head' or classname == 'helmet_off' or classname == 'hood' or classname == 'hat'):
                     ymin = ymin - 0.1 * ymin
-                    ymax = ymax + 0.2 * ymax
+                    ymax = ymax + 0.2 * ymax'''
 
                 
                 

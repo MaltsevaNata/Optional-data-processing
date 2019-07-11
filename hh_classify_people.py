@@ -15,20 +15,27 @@ predicted_ann = 'D:/Study/Python/old_hh/predicted_annot'
 def get_objects(file):
     tree = xml.parse(file)
     root = tree.getroot()
-    objects = [[None]*3 for i in (range(len(root)-6))] # 0- classname, 1,2 - center coordinates(x,y)
-    i = 0
+    #objects = [[None]*3 for i in (range(len(root)-6))] # 0- classname, 1,2 - center coordinates(x,y)
+    objects = []
+    #i = 0
     for elem in root:
+        list = []
         for subelem in elem:
+
             if subelem.tag == 'name':
-                objects[i][0] = subelem.text
+                list.append(subelem.text)
+               # objects[i][0] = subelem.text
 
             if subelem.tag == 'bndbox':
                 coords=[]
                 for values in subelem:
                     coords.append(int(values.text))
-                objects[i][1] = abs(coords[2]-coords[0]) #xmax-xmin
-                objects[i][2] = abs(coords[3]-coords[2]) #ymax - ymin
-                i = i + 1
+                #objects[i][1] = abs(coords[2]-coords[0]) #xmax-xmin
+                list.append(abs(coords[2]-coords[0]))
+                #objects[i][2] = abs(coords[3]-coords[2]) #ymax - ymin
+                list.append(abs(coords[3]-coords[2]))
+                objects.append(list)
+                #i = i + 1
 
     return objects
 
@@ -37,6 +44,7 @@ def get_pairs(objects):
     people = []
     head_types = ['helmet' , 'head', 'hat', 'hood']
     headdress = []
+    helmets = []
     for obj in range(len(objects)):
         list=[]
         list.append( objects[obj][0])
@@ -46,7 +54,9 @@ def get_pairs(objects):
                 headdress.append(list)
                 continue
         if objects[obj][0] == 'person':
-                people.append(list)
+            people.append(list)
+        if objects[obj][0] == 'helmet_off':
+            helmets.append(list)
     pairs = []
     for person in people:
         min_dist = 20000
@@ -63,15 +73,35 @@ def get_pairs(objects):
         list = [min_head, min_person[1]]
         pairs.append(list)
         headdress.remove(delete)
-    return pairs
+    return pairs, helmets
 
 
 def get_color(person):
     return{
             'helmet': 'person_green',
-            'helmet_off' or 'head' or 'hat': 'person_red',
+            'head': 'person_red',
+            'hat': 'person_red',
+            'helmet_off': 'helmet_off',
             'hood': 'person_orange'
         }[person[0]]
+
+def compare(pairs, predicted_pairs):
+    guessed = 0
+    not_guessed = len(pairs)
+    for pair in pairs:
+        for predicted_pair in predicted_pairs:
+            pr_name = predicted_pair[0]
+            name = pair[0]
+            pr_x = predicted_pair[1]
+            pr_y = predicted_pair[2]
+            x = pair[1][0]
+            y = pair[1][1]
+            deltax = predicted_pair[1] - pair[1][0]
+            deltay = predicted_pair[2] - pair[1][1]
+            if pr_name == name and deltax < 200 and deltay < 200:
+                guessed = guessed + 1
+                not_guessed = not_guessed - 1
+    return guessed, not_guessed
 
 
 marked = os.listdir(marked_ann)
@@ -83,12 +113,16 @@ predicted.sort()
 for ann in marked:
     with open(marked_ann + '/' + ann, 'r') as f1:
         box1 = get_objects(f1)
-        pairs = get_pairs(box1)
+        pairs, helmets = get_pairs(box1)
         for person in pairs:
             person[0] = get_color(person)
+        for helmet in helmets:
+            pairs.append(helmet)
         f2 = open(predicted_ann + '/' + ann, 'r')
-        #box2 = get_objects(f2) ?????
-
+        predicted_pairs = get_objects(f2)
+        guessed, not_guessed = compare(pairs, predicted_pairs)
+        print('Guessed: ', guessed, end='\n')
+        print('Not guessed: ', not_guessed, end='')
 
 
 
