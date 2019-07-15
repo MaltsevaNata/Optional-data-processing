@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
-import numpy
+import numpy as np
 #from txttoxml import create_subelement
 #from utils_boxes import bbox_transform_l_corner
 #from utils_annot import parse_annotation_xml, save_anno_xml
 import xml.etree.ElementTree as xml
 import math
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import itertools
 
 
 marked_ann = open('/home/user/Документы/for_metrics/gt_val.txt', 'r')
@@ -14,6 +17,39 @@ predicted_ann = '/home/user/Документы/for_metrics/hh_vis_det_and_cls_lo
 
 fail_num = 0
 
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
 
 def get_objects(file):
     try:
@@ -92,7 +128,14 @@ def get_color(person):
             '': 'error'
         }[person[0]]
 
-def compare(pairs, predicted_pairs, TP, FP, FN):
+def get_color_num(person_color):
+    return{
+            'person_green': 0,
+            'person_red': 1,
+            'person_orange': 2
+        }[person_color]
+
+def compare(pairs, predicted_pairs, TP, FP, FN, y_true, y_pred):
     for pair in pairs:
         for predicted_pair in predicted_pairs:
             pr_name = predicted_pair[0]
@@ -101,6 +144,9 @@ def compare(pairs, predicted_pairs, TP, FP, FN):
             deltay = abs(predicted_pair[2] - pair[1][1])
             #if pr_name == 'person_orange' or name == 'person_red' or name == 'person_orange' or pr_name == 'person_red':
                # print('meow')
+            if deltax < 220 and deltay < 220:
+                y_true.append(name)
+                y_pred.append(pr_name)
             if ((pr_name == 'person_orange' and name == 'person_red') or (name == 'person_orange' and pr_name == 'person_red')) and deltax < 220 and deltay < 220:
                 FP = FP  -0.5
                 #print("red to orange")
@@ -110,7 +156,8 @@ def compare(pairs, predicted_pairs, TP, FP, FN):
                 FP = FP + 1
             else:
                 FN = FN + 1
-    return TP, FP, FN
+    return TP, FP, FN, y_true, y_pred
+
 
 
 marked = marked_ann.readlines()
@@ -124,6 +171,11 @@ TP = 0  #недалеко и совпал класс
 FP = 0  #класс не совпал
 FN = 0  #ничего не совпало
 
+y_true = []
+y_pred = []
+
+
+
 i = 0
 for ann in marked:
     with open(ann.rstrip('\n'), 'r') as f1:
@@ -136,13 +188,31 @@ for ann in marked:
         try:
             f2 = open(predicted_ann + '/' + 'det_' + str(i) + '.xml', 'r')
             predicted_pairs = get_objects(f2)
-            TP, FP, FN = compare(pairs, predicted_pairs, TP, FP, FN)
+            TP, FP, FN, y_true, y_pred = compare(pairs, predicted_pairs, TP, FP, FN, y_true, y_pred)
+            #y_true, y_pred = fill_pred_arr(pairs, predicted_pairs, y_true, y_pred)
         except:
             print('Failed: ', ann, end='\n ')
             fail_num = fail_num + 1
             i = i + 1
             continue
         i = i + 1
+
+class_names = ['person_green', 'person_red', 'person_orange']
+cnf_matrix = confusion_matrix(y_true, y_pred, labels=['person_green', 'person_red', 'person_orange'])
+np.set_printoptions(precision=2)
+
+# Plot non-normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=class_names,
+                      title='Confusion matrix, without normalization')
+
+# Plot normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
+                      title='Normalized confusion matrix')
+plt.show()
+
+
 precision = TP/(TP+FP)
 recall = TP/(TP+FN)
 F1 = 2 * (precision * recall)/(precision + recall)
