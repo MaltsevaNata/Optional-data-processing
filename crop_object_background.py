@@ -7,9 +7,9 @@ from PIL import Image
 from utils_boxes import bbox_transform_inv
 import random
 
-in_img = 'D:/Study/Python/old_hh_2/1_selected_img'
-out_img = 'D:/Study/Python/old_hh_2/cropped_objects'
-annotations = 'D:/Study/Python/old_hh_2/1_selected_annot'
+in_img = '/home/user/Документы/hard_hat/1_horizontal'
+out_img = '/home/user/Документы/cropped_objects'
+annotations = '/home/user/Документы/hard_hat/1_annotations'
 
 def resize(xmin, ymin, xmax, ymax) :
     deltay = int(ymax) - int(ymin)
